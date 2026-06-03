@@ -12,7 +12,9 @@ This is the "why redink exists, why this shape" doc. Build sequence is in [roadm
 
 After surveying six adjacent product shapes — deep-research CLI, AI commerce protocol emulator, deploy-patterns init, AI Lighthouse, create-ai-cli scaffolder, live agent visualizer — the surviving angle is:
 
-**An opinionated, score-first, cross-agent audit CLI for AI coding sessions. Lead with the opinion. The HTML export is the share artifact. Live mode exists but isn't the lede.**
+**A live, opinionated web UI that watches your Claude Code session and surfaces senior-engineer-grade callouts in real time. The post-hoc CLI audit + self-contained HTML export are the secondary surfaces. The web UI is the lede.**
+
+The visualizer alone is red ocean (eight tools as of June 2026). The score alone is commoditizing. The combination — *live visualization with sharp opinions firing inline* — is the wedge. claude-view shows the flow but doesn't tell you what you're doing wrong; AgentLint scores but isn't visual; nobody does both yet.
 
 ### Why not the others
 
@@ -63,9 +65,9 @@ Borrow opinionation, skip DHH-style picking-fights energy. The opinion lands har
 
 ## v0.1 scope summary
 
-**DoD:** `redink audit <session.jsonl>` against a real Claude Code session produces an opinionated terminal report. 5 rule types implemented. Per-turn callouts. Summary score. "What to do" tail.
+**DoD:** `redink watch` starts a local web UI on `:8787` that, while Claude Code is running, shows the session flow live with opinionated callouts firing inline. `redink audit <session.jsonl>` runs the same engine post-hoc as a terminal report. `redink export <session.jsonl> > out.html` writes a self-contained, shareable HTML file.
 
-**Five v0.1 rule types:**
+**Five v0.1 rule types (same engine powers all three surfaces):**
 
 1. **Context bloat** — N tokens of content sent that were already in context
 2. **Compaction loss** — compaction triggered and a critical reference was lost downstream
@@ -73,4 +75,4 @@ Borrow opinionation, skip DHH-style picking-fights energy. The opinion lands har
 4. **Re-explain over tool** — described file contents that could have been read via tool call
 5. **Brief miss** — session started without a brief-bootstrap pattern
 
-Each rule has a one-paragraph rationale in `docs/rules/`, a configurable threshold, and a "fix this" suggestion in the output. The full build order is in [`roadmap.md`](roadmap.md).
+Each rule has a one-paragraph rationale in `docs/rules/`, a configurable threshold, and a "fix this" suggestion in the output. The full build order — split into two parallel tracks for parallel Claude Code sessions — is in [`roadmap.md`](roadmap.md) and the per-track briefs are in [`sessions/`](sessions/).

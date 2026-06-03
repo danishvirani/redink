@@ -29,6 +29,7 @@ def test_help_renders_with_commands():
         assert exc.value.code == 0
     out = captured.getvalue()
     assert "redink" in out
+    assert "watch" in out
     assert "audit" in out
     assert "export" in out
     assert "version" in out
@@ -66,6 +67,24 @@ def test_export_stub_returns_nonzero():
         rc = cli.main(["export", "/tmp/dummy.jsonl"])
     assert rc == 1
     assert "not yet implemented" in captured.getvalue()
+
+
+def test_watch_stub_returns_nonzero():
+    captured = io.StringIO()
+    with redirect_stderr(captured):
+        rc = cli.main(["watch"])
+    assert rc == 1
+    err = captured.getvalue()
+    assert "not yet implemented" in err
+    assert "8787" in err
+
+
+def test_watch_accepts_port_flag():
+    captured = io.StringIO()
+    with redirect_stderr(captured):
+        rc = cli.main(["watch", "--port", "9000"])
+    assert rc == 1
+    assert "9000" in captured.getvalue()
 
 
 def test_no_subcommand_errors_cleanly():

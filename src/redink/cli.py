@@ -29,22 +29,46 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 def cmd_export(args: argparse.Namespace) -> int:
     _eprint(f"redink: export not yet implemented (target: {args.path})")
-    _eprint("v0.2 ships the self-contained HTML export.")
+    _eprint("v0.1 ships the self-contained HTML export.")
     _eprint("See docs/roadmap.md for the build sequence.")
+    return 1
+
+
+def cmd_watch(args: argparse.Namespace) -> int:
+    _eprint(f"redink: watch not yet implemented (would listen on :{args.port})")
+    _eprint("v0.1 ships the live web UI. This is the lede.")
+    _eprint("See docs/roadmap.md and docs/sessions/track-b-visualizer.md.")
     return 1
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="redink",
-        description="Opinionated audits for AI coding sessions.",
+        description="Watch your Claude Code session live, with red ink in the margins.",
         epilog="Full docs at https://github.com/danishvirani/redink",
     )
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
 
+    p_watch = sub.add_parser(
+        "watch",
+        help="Start the live web UI and watch sessions as they happen",
+    )
+    p_watch.add_argument(
+        "--port",
+        type=int,
+        default=8787,
+        help="Port to bind the local web UI (default: 8787)",
+    )
+    p_watch.add_argument(
+        "--projects-dir",
+        default=None,
+        help="Path to ~/.claude/projects/ (defaults to that)",
+    )
+    p_watch.set_defaults(func=cmd_watch)
+
     p_audit = sub.add_parser(
         "audit",
-        help="Audit a Claude Code session and print a marked-up report",
+        help="Run the audit post-hoc and print a marked-up terminal report",
     )
     p_audit.add_argument(
         "path",
