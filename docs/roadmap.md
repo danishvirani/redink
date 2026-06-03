@@ -91,39 +91,50 @@ Defined in `src/redink/events.py`. Track A produces; Track B consumes (and re-em
 
 ---
 
-## v0.2 — cross-agent + polish
+## v0.2 — cross-agent + smart warnings
 
-Make redink work for users who aren't on Claude Code.
+Make redink work for users who aren't on Claude Code AND start nudging users in real time, not just scoring them post-hoc.
 
-**DoD:** `redink audit <cursor-workspace>` and `redink watch --source cursor` work against Cursor's SQLite session storage with the same rule engine.
+**DoD:**
+1. `redink audit <cursor-workspace>` and `redink watch --source cursor` work against Cursor's SQLite session storage with the same rule engine.
+2. Live UI surfaces proactive warnings when context approaches threshold and suggests delegating to a sub-agent.
 
 **Commits:**
 1. **Cursor SQLite parser** — read workspace SQLite, emit the same typed turn events.
 2. **Auto-detect source** — `redink audit <dir>` figures out which agent's logs to read.
 3. **Codex CLI parser** — same shape, smaller fixtures.
-4. **Polish pass** — the web UI gets a real design pass: dark mode, copyable callout text, keyboard shortcuts for scrubbing.
-5. **`docs/sharing.md`** — patterns for using exported HTML in Slack, GitHub gists, PR comments.
+4. **Rule: context-budget warning** — when running token total exceeds 80k, fire a warn-level callout: "Context at 82% of budget. Consider summarizing or spawning a sub-agent."
+5. **Rule: sub-agent suggestion** — heuristic: turn spawns >3 tool calls on a tangentially-related task → fire info-level "This subtask could be delegated to a sub-agent to keep main context clean."
+6. **Polish pass** — dark mode, copyable callout text, keyboard shortcuts for scrubbing.
+7. **`docs/sharing.md`** — patterns for using exported HTML in Slack, GitHub gists, PR comments.
 
 ---
 
-## v0.3 — Claude Code plugin + MCP server
+## v0.3 — interventions + Claude Code plugin + MCP server
 
-The wrapper layer. Same core, three integration surfaces.
+The wrapper layer + the actions. redink stops being purely observational and starts helping you save state before things go wrong.
 
 **DoD:**
-- `plugins/redink/` installs into `~/.claude/plugins/redink/`. Slash commands `/redink-watch` (opens the URL) and `/redink-audit` work.
-- `redink mcp` starts a stdio MCP server exposing `audit`, `export`, `current_score` as tools.
+- `plugins/redink/` installs into `~/.claude/plugins/redink/`. Slash commands `/redink-watch`, `/redink-audit`, `/redink-snapshot` work.
+- `redink mcp` starts a stdio MCP server exposing `audit`, `export`, `current_score`, `snapshot_to` as tools.
+- `redink snapshot --to linear AGX-123` (or `--to notion <page>`, `--to gist`, `--to file ~/notes/`) captures the current session's context + decisions and saves them outside the session, so the next session can resume cleanly.
 
 **Commits:**
 1. **`plugins/redink/.claude-plugin/plugin.json`** + command markdown files.
 2. **`redink-bootstrap` skill** that auto-loads on session start.
 3. **`redink mcp` server** — hand-rolled stdio JSON-RPC, ~150 lines, no SDK dep.
-4. **README sections become real** — drop "deferred" framing.
+4. **`redink snapshot`** core — extract session decisions + key file references + open questions into a structured summary.
+5. **Snapshot destination: file** — write to `~/notes/redink-snapshots/` as markdown.
+6. **Snapshot destination: GitHub Gist** — via `gh` CLI if installed, fallback to clipboard.
+7. **Snapshot destination: Linear** — via API key, append a comment or create a sub-ticket on the parent. (Generic enough to ship — same pattern as agentix-cli's heredoc create.)
+8. **Snapshot destination: Notion** — via API key, append to a configured page.
+9. **README sections become real** — drop "deferred" framing.
 
 ---
 
 ## Beyond v0.3 (radar, not committed)
 
+- **Auto-compact** — when context exceeds threshold, redink offers an inline "Snapshot + reset" action that captures the session state to the configured destination, gives you a 1-line "where to pick up" summary, and lets you start a fresh Claude Code session with that summary pre-loaded. This is the killer "redink saved my session" moment. Bigger feature; needs careful UX.
 - Gemini Code Assist log parser
 - `redink rule add` — user-defined rules via YAML
 - `redink history` — trend chart across sessions of a project
