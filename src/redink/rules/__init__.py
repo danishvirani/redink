@@ -10,12 +10,13 @@ from __future__ import annotations
 
 from redink.events import RuleFiring
 from redink.parser import Session
-from redink.rules import compaction_loss, context_bloat
+from redink.rules import compaction_loss, context_bloat, vague_prompt
 from redink.rules.config import RuleConfig
 
 ALL_RULES = [
     context_bloat,
     compaction_loss,
+    vague_prompt,
 ]
 
 
