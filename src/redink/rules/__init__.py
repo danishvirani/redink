@@ -11,6 +11,7 @@ from __future__ import annotations
 from redink.events import RuleFiring
 from redink.parser import Session
 from redink.rules import (
+    brief_miss,
     compaction_loss,
     context_bloat,
     reexplain_over_tool,
@@ -23,6 +24,7 @@ ALL_RULES = [
     compaction_loss,
     vague_prompt,
     reexplain_over_tool,
+    brief_miss,
 ]
 
 
