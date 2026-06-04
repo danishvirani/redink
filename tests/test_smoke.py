@@ -43,22 +43,14 @@ def test_version_command_prints_and_returns_zero():
     assert "redink 0.0.1" in captured.getvalue()
 
 
-def test_audit_stub_returns_nonzero_and_explains():
+def test_audit_missing_session_returns_nonzero():
     captured = io.StringIO()
     with redirect_stderr(captured):
-        rc = cli.main(["audit"])
+        rc = cli.main(["audit", "/tmp/does-not-exist-redink.jsonl"])
     assert rc == 1
     err = captured.getvalue()
-    assert "not yet implemented" in err
-    assert "roadmap" in err.lower()
-
-
-def test_audit_with_path_arg():
-    captured = io.StringIO()
-    with redirect_stderr(captured):
-        rc = cli.main(["audit", "/tmp/some-session.jsonl"])
-    assert rc == 1
-    assert "/tmp/some-session.jsonl" in captured.getvalue()
+    assert "redink:" in err
+    assert "not found" in err
 
 
 def test_export_stub_returns_nonzero():

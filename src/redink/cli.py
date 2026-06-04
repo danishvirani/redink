@@ -5,9 +5,16 @@ v0.1 ships the real audit engine. See docs/roadmap.md.
 """
 
 import argparse
+import re
 import sys
+from pathlib import Path
 
 from redink import __version__
+from redink.errors import RedinkError
+from redink.parser import parse_file
+from redink.report import render, should_color
+from redink.rules import run_all
+from redink.score import score_session
 
 
 def _eprint(msg: str) -> None:
@@ -19,12 +26,49 @@ def cmd_version(args: argparse.Namespace) -> int:
     return 0
 
 
+def _encode_project_dir(path: Path) -> str:
+    """Claude Code stores a project's sessions under a path-derived dir name,
+    with every non-alphanumeric char replaced by a dash."""
+    return re.sub(r"[^A-Za-z0-9]", "-", str(path))
+
+
+def _latest_session_in(directory: Path) -> Path:
+    sessions = sorted(directory.glob("*.jsonl"), key=lambda f: f.stat().st_mtime, reverse=True)
+    if not sessions:
+        raise RedinkError(f"no .jsonl sessions found in {directory}")
+    return sessions[0]
+
+
+def resolve_session_path(arg: str | None, projects_dir: Path | None = None) -> Path:
+    """Turn the audit argument into a concrete session file.
+
+    A file path is used as-is; a directory resolves to its most recent session;
+    nothing resolves to the most recent session of the current project.
+    """
+    if arg:
+        path = Path(arg).expanduser()
+        return _latest_session_in(path) if path.is_dir() else path
+
+    base = projects_dir or (Path.home() / ".claude" / "projects")
+    project = base / _encode_project_dir(Path.cwd())
+    if not project.is_dir():
+        raise RedinkError(
+            "no Claude Code sessions found for this project "
+            f"({project}). Pass a session path explicitly."
+        )
+    return _latest_session_in(project)
+
+
 def cmd_audit(args: argparse.Namespace) -> int:
-    target = args.path or "current project"
-    _eprint(f"redink: audit not yet implemented (target: {target})")
-    _eprint("v0.1 ships the real audit engine with 5 rule types.")
-    _eprint("See docs/roadmap.md for the build sequence.")
-    return 1
+    try:
+        path = resolve_session_path(args.path)
+        session = parse_file(path)
+        score = score_session(run_all(session))
+        sys.stdout.write(render(session, score, color=should_color()))
+    except RedinkError as exc:
+        _eprint(f"redink: {exc}")
+        return 1
+    return 0
 
 
 def cmd_export(args: argparse.Namespace) -> int:
